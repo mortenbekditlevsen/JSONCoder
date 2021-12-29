@@ -52,9 +52,14 @@ extension Dictionary : _JSONStringDictionaryDecodableMarker where Key == String,
     static var elementType: Decodable.Type { return Value.self }
 }
 
-// TODO: Move this type to the Swift standard library
-public protocol PreformattedCodingKey: CodingKey {}
+// NOTE: As we cannot extend `CodingKey` in this test, I add a sub protocol to allow this extension
+public protocol TestCodingKey: CodingKey {
+    static var isPreformatted: Bool { get }
+}
 
+extension TestCodingKey {
+    static var isPreformatted: Bool { false }
+}
 
 //===----------------------------------------------------------------------===//
 // JSON Encoder
@@ -523,7 +528,7 @@ private struct _JSONKeyedEncodingContainer<K : CodingKey> : KeyedEncodingContain
     // MARK: - Coding Path Operations
 
     private func _converted(_ key: CodingKey) -> CodingKey {
-        if key is PreformattedCodingKey {
+        if let testKey = key as? TestCodingKey, type(of: testKey).isPreformatted {
             return key
         }
         switch (encoder.options.keyCodingStrategy, encoder.options.keyEncodingStrategy) {
@@ -1457,7 +1462,7 @@ private struct _JSONKeyedDecodingContainer<K : CodingKey> : KeyedDecodingContain
         self.decoder = decoder
         self.codingPath = decoder.codingPath
 
-        guard !(Key.self is PreformattedCodingKey.Type) else {
+        if let TestKeyType = Key.self as? TestCodingKey.Type, TestKeyType.isPreformatted {
             self.container = container
             return
         }
@@ -1486,7 +1491,7 @@ private struct _JSONKeyedDecodingContainer<K : CodingKey> : KeyedDecodingContain
 
     // MARK: - Coding Path Operations
     private func _converted(_ key: CodingKey) -> CodingKey {
-        if key is PreformattedCodingKey {
+        if let testKey = key as? TestCodingKey, type(of: testKey).isPreformatted {
             return key
         }
         switch decoder.options.keyCodingStrategy {

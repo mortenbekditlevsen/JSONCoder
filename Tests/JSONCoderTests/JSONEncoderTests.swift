@@ -14,7 +14,7 @@ struct MyCodingKey: CodingKey {
   }
 }
 
-struct MyPreformattedCodingKey: PreformattedCodingKey {
+struct MyPreformattedCodingKey: TestCodingKey, CodingKey {
   var stringValue: String
   var intValue: Int? { nil }
   init(stringValue: String) {
@@ -23,6 +23,7 @@ struct MyPreformattedCodingKey: PreformattedCodingKey {
   init?(intValue: Int) {
     self.stringValue = "\(intValue)"
   }
+  static var isPreformatted: Bool { true }
 }
 
 final class JSONEncoderTests: XCTestCase {
@@ -40,6 +41,9 @@ final class JSONEncoderTests: XCTestCase {
     let model = try decoder.decode(Model.self, from: data)
     XCTAssertEqual(model.imageURL, "a")
   }
+  
+  // NOTE: This only works in tests and is only included for
+  // illustrative purposes.
   func testCustom() throws {
     struct Model: Codable {
       var imageURL: String
@@ -56,6 +60,7 @@ final class JSONEncoderTests: XCTestCase {
     let model = try decoder.decode(Model.self, from: data)
     XCTAssertEqual(model.imageURL, "a")
   }
+
   func testPreformattedKey() throws {
     struct Model: Codable {
       var imageURL: String
